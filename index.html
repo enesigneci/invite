@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Test Daveti</title>
+<meta name="description" content="Enes'in Android uygulamalarının kapalı testine katıl.">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --bg:#f6f5f1; --card:#ffffff; --ink:#1d1d1b; --muted:#6b6a65; --line:#e6e3dc;
+    --accent:#1f7a5a; --accent-ink:#ffffff; --accent-soft:#e3f1ea; --warn:#9a5b00; --warn-soft:#fff3df;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#141413; --card:#1e1e1c; --ink:#f1efe9; --muted:#a3a19a; --line:#2f2e2b;
+      --accent:#4fbf93; --accent-ink:#0d1f17; --accent-soft:#1c3329; --warn:#f0b35a; --warn-soft:#33281a;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  main{max-width:560px;margin:0 auto;padding:32px 16px 64px}
+  h1{font-size:1.75rem;line-height:1.2;margin:0 0 8px;letter-spacing:-.01em}
+  .lead{color:var(--muted);margin:0 0 28px}
+  .step{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px}
+  .step-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .num{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+    background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:.9rem}
+  .step.done .num{background:var(--accent);color:var(--accent-ink)}
+  h2{font-size:1.1rem;margin:0}
+  p{margin:0 0 12px}
+  .muted{color:var(--muted);font-size:.92rem}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 18px;
+    border-radius:12px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);
+    font-weight:600;font-size:.95rem;text-decoration:none;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--accent)}
+  .btn[aria-disabled="true"]{opacity:.45;pointer-events:none}
+  .row{display:flex;flex-wrap:wrap;gap:8px}
+  .account{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:var(--accent-soft)}
+  .account img{width:40px;height:40px;border-radius:50%}
+  .account b{display:block;word-break:break-all}
+  .linkish{background:none;border:0;padding:0;color:var(--accent);font:inherit;font-size:.9rem;cursor:pointer;text-decoration:underline}
+  .app{border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:12px}
+  .app-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:4px}
+  .app h3{margin:0;font-size:1.02rem}
+  .badge{flex:none;font-size:.75rem;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--line);color:var(--muted)}
+  .app.done .badge{background:var(--accent);color:var(--accent-ink)}
+  .app .row{margin-top:12px}
+  .app .btn{flex:1 1 140px}
+  .check{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:.92rem;color:var(--muted);cursor:pointer}
+  .check input{width:18px;height:18px;accent-color:var(--accent)}
+  .note{background:var(--warn-soft);color:var(--warn);border-radius:12px;padding:12px 14px;font-size:.92rem;margin-bottom:16px}
+  .note[hidden],.step[hidden],.status[hidden]{display:none}
+  .status{margin:10px 0 0;font-size:.92rem;color:var(--accent);font-weight:600}
+  #apps.locked{opacity:.45;pointer-events:none}
+  details{border-top:1px solid var(--line);padding:12px 0}
+  details:last-child{border-bottom:1px solid var(--line)}
+  summary{cursor:pointer;font-weight:600}
+  details p{margin:8px 0 0;color:var(--muted);font-size:.93rem}
+  .progress{height:6px;border-radius:99px;background:var(--line);overflow:hidden;margin:0 0 24px}
+  .progress span{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+  footer{margin-top:28px;text-align:center;color:var(--muted);font-size:.85rem}
+</style>
+</head>
+<body>
+<main>
+  <h1>Uygulamalarımı test eder misin? 🙏</h1>
+  <p class="lead" id="lead"></p>
+  <div class="progress" aria-hidden="true"><span id="bar"></span></div>
+
+  <div class="note" id="webviewNote" hidden>
+    Bu sayfa bir uygulamanın içinde açılmış görünüyor. Google ile giriş burada çalışmayabilir.
+    Sağ üstteki menüden <b>“Chrome'da aç”</b>ı seç.
+  </div>
+
+  <!-- 1: Google girişi -->
+  <section class="step" id="s1">
+    <div class="step-head"><div class="num">1</div><h2>Google hesabınla giriş yap</h2></div>
+    <p class="muted">Telefonundaki <b>Play Store'da açık olan hesabı</b> seç. Farklı hesap seçersen uygulamalar görünmez.</p>
+    <div id="gsiBox"><div id="gsiButton"></div></div>
+    <div id="signedIn" hidden>
+      <div class="account">
+        <img id="avatar" alt="" referrerpolicy="no-referrer">
+        <div><span class="muted">Giriş yapılan hesap</span><b id="email"></b></div>
+      </div>
+      <p class="status" id="joinStatus" hidden></p>
+      <p class="muted" style="margin-top:10px">Yanlış hesap mı? <button class="linkish" id="switchBtn">Başka hesap seç</button></p>
+    </div>
+    <p class="muted" id="gsiMissing" hidden>Giriş butonu yüklenemedi. Sorun değil, aşağıdaki adımlarla devam edebilirsin.</p>
+  </section>
+
+  <!-- 2: Gruba katıl (otomatik modda sadece otomatik ekleme başarısız olursa görünür) -->
+  <section class="step" id="s2">
+    <div class="step-head"><div class="num">2</div><h2>Test grubuna katıl</h2></div>
+    <p class="muted">Açılan sayfada <b>“Gruba katıl”</b> butonuna bas. Bunu bir kez yapman yeterli.</p>
+    <a class="btn" id="groupBtn" target="_blank" rel="noopener">Test grubunu aç</a>
+    <label class="check"><input type="checkbox" data-key="group"> Gruba katıldım</label>
+  </section>
+
+  <!-- 3: Uygulamalar -->
+  <section class="step" id="s3">
+    <div class="step-head"><div class="num">3</div><h2>Her uygulama için testçi ol</h2></div>
+    <p class="muted">Her uygulamada sırayla: önce <b>“Testçi ol”</b>, açılan sayfada <b>“Test kullanıcısı ol”</b>a bas; sonra <b>“Yükle”</b>.
+      Grup üyeliğinin yansıması birkaç dakika sürebilir.</p>
+    <p class="note" id="appsLocked" hidden>Önce 1. adımda Google ile giriş yap; seni test grubuna ben ekleyeceğim.</p>
+    <div id="apps"></div>
+  </section>
+
+  <!-- 4: 14 gün -->
+  <section class="step" id="s4">
+    <div class="step-head"><div class="num">4</div><h2>14 gün silme 🙂</h2></div>
+    <p>Google, uygulamaların yayınlanabilmesi için testçilerin <b>en az 14 gün</b> testte kalmasını istiyor.
+      Arada bir açman yeterli. Silersen ya da testten çıkarsan sayaç benim için baştan başlayabiliyor.</p>
+  </section>
+
+  <section style="margin-top:28px">
+    <details><summary>“Uygulama bulunamadı” diyor</summary>
+      <p>Play Store'da açık hesap ile 1. adımda seçtiğin hesap aynı olmalı. Gruba katıldıktan sonra 5–10 dakika bekleyip linki tekrar dene.</p></details>
+    <details><summary>Telefonumda birden fazla Google hesabı var</summary>
+      <p>Play Store'u aç, sağ üstteki profil resmine dokun ve hangi hesabın seçili olduğuna bak. Gruba ve testlere o hesapla katıl.</p></details>
+    <details><summary>Bilgilerimle ne yapılıyor?</summary>
+      <p>Sadece adın ve e-posta adresin, seni test listesine eklemek için kaydediliyor. Başka hiçbir yerde kullanılmıyor.</p></details>
+  </section>
+
+  <footer>Teşekkürler! — <span id="ownerName"></span></footer>
+</main>
+
+<script>
+/* ======================= AYARLAR — sadece burayı düzenle ======================= */
+const CONFIG = {
+  ownerName: "Enes",
+  // Google Cloud Console > APIs & Services > Credentials > OAuth client ID (Web application)
+  googleClientId: "1051045005730-mb179jgdgemshiua36bv4gkac3r14mua.apps.googleusercontent.com",
+  // true: giriş yapan kişi Code.gs tarafından gruba otomatik eklenir, grup adımı gizlenir.
+  // Otomatik ekleme başarısız olursa grup adımı yedek olarak görünür.
+  autoJoinGroup: false,
+  // groups.google.com'daki grubunun sayfası ("Gruba katıl" butonu için)
+  groupUrl: "https://groups.google.com/g/enes-app-testers",
+  // Apps Script web app URL'si (Code.gs). Boş bırakırsan e-postalar kaydedilmez ve gruba otomatik ekleme yapılmaz.
+  sheetEndpoint: "",
+  apps: [
+    { name: "Pourcery", desc: "İksir sıralama bulmacası", packageName: "com.pourcery" },
+    { name: "Vocab5K", desc: "İngilizce–Türkçe 5000 kelime", packageName: "com.vocab5k.app" },
+  ],
+};
+/* =============================================================================== */
+
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k){ try { return JSON.parse(localStorage.getItem("invite:"+k)); } catch { return null; } },
+  set(k,v){ try { localStorage.setItem("invite:"+k, JSON.stringify(v)); } catch {} },
+};
+
+$("lead").textContent = `${CONFIG.apps.length} uygulamamın kapalı testine katılman yaklaşık 3 dakika sürer. Adımları sırayla izle.`;
+$("ownerName").textContent = CONFIG.ownerName;
+$("groupBtn").href = CONFIG.groupUrl;
+
+// Uygulama içi tarayıcı (WhatsApp/Instagram webview) uyarısı
+if (/; wv\)|FBAN|FBAV|Instagram/i.test(navigator.userAgent)) $("webviewNote").hidden = false;
+
+// Uygulama kartları
+$("apps").innerHTML = CONFIG.apps.map((a, i) => `
+  <div class="app" id="app-${i}">
+    <div class="app-top"><div><h3>${a.name}</h3><div class="muted">${a.desc || ""}</div></div>
+      <span class="badge">Bekliyor</span></div>
+    <div class="row">
+      <a class="btn" target="_blank" rel="noopener" href="https://play.google.com/apps/testing/${a.packageName}">1 · Testçi ol</a>
+      <a class="btn ghost" target="_blank" rel="noopener" href="https://play.google.com/store/apps/details?id=${a.packageName}">2 · Yükle</a>
+    </div>
+    <label class="check"><input type="checkbox" data-key="app:${a.packageName}"> Testçi oldum ve yükledim</label>
+  </div>`).join("");
+
+// Onay kutuları + ilerleme
+const boxes = [...document.querySelectorAll("input[data-key]")];
+let joining = false;
+const needsManualGroup = () => !CONFIG.autoJoinGroup || !!store.get("groupFallback");
+
+function render(){
+  const user = store.get("user");
+  const inGroup = !!store.get("group");
+
+  // Grup adımı: otomatik modda sadece yedek gerekirse görünür
+  $("s2").hidden = !needsManualGroup();
+  [...document.querySelectorAll(".step")].filter(s => !s.hidden)
+    .forEach((s, i) => s.querySelector(".num").textContent = i + 1);
+
+  // Otomatik modda gruba eklenmeden uygulama butonlarını kilitle
+  const locked = CONFIG.autoJoinGroup && !inGroup && !store.get("groupFallback");
+  $("apps").classList.toggle("locked", locked);
+  $("appsLocked").hidden = !locked;
+
+  const visible = boxes.filter(b => !b.closest("[hidden]"));
+  let doneCount = user ? 1 : 0;
+  boxes.forEach(b => {
+    b.checked = !!store.get(b.dataset.key);
+    if (b.checked && visible.includes(b)) doneCount++;
+    const card = b.closest(".app");
+    if (card){ card.classList.toggle("done", b.checked); card.querySelector(".badge").textContent = b.checked ? "Tamam ✓" : "Bekliyor"; }
+  });
+  $("s1").classList.toggle("done", !!user && (inGroup || needsManualGroup()));
+  $("s2").classList.toggle("done", inGroup);
+  $("s3").classList.toggle("done", CONFIG.apps.every(a => store.get("app:"+a.packageName)));
+  $("bar").style.width = Math.round(doneCount / (visible.length + 1) * 100) + "%";
+
+  if (user){
+    $("gsiBox").hidden = true; $("signedIn").hidden = false;
+    $("email").textContent = user.email; $("avatar").src = user.picture || "";
+  } else { $("gsiBox").hidden = false; $("signedIn").hidden = true; }
+
+  let status = "";
+  if (CONFIG.autoJoinGroup && user){
+    if (joining) status = "Seni test grubuna ekliyorum…";
+    else if (inGroup && !store.get("groupFallback")) status = "✓ Test grubuna eklendin. Şimdi uygulamalara geç.";
+    else if (store.get("groupFallback")) status = "Seni otomatik ekleyemedim, aşağıdaki 2. adımı yapman yeterli.";
+  }
+  $("joinStatus").textContent = status;
+  $("joinStatus").hidden = !status;
+}
+boxes.forEach(b => b.addEventListener("change", () => { store.set(b.dataset.key, b.checked); render(); }));
+
+function fallbackToManual(){
+  joining = false;
+  if (CONFIG.autoJoinGroup && !store.get("group")) store.set("groupFallback", true);
+  render();
+}
+
+// Google Identity Services
+function decodeJwt(t){
+  const p = t.split(".")[1].replace(/-/g,"+").replace(/_/g,"/");
+  return JSON.parse(decodeURIComponent(atob(p).split("").map(c => "%"+("00"+c.charCodeAt(0).toString(16)).slice(-2)).join("")));
+}
+function onCredential(resp){
+  const c = decodeJwt(resp.credential);
+  store.set("user", { email: c.email, name: c.name || "", picture: c.picture || "" });
+  if (!CONFIG.sheetEndpoint) return fallbackToManual();
+  joining = true;
+  render();
+  // Code.gs kimliği doğrular, e-postayı kaydeder ve kişiyi gruba ekler
+  fetch(CONFIG.sheetEndpoint, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ credential: resp.credential, apps: CONFIG.apps.map(a => a.packageName) }),
+  })
+    .then(r => r.json())
+    .then(res => {
+      if (!(res.ok && res.joined)) return fallbackToManual();
+      joining = false;
+      store.set("group", true);
+      store.set("groupFallback", null);
+      render();
+    })
+    .catch(fallbackToManual);
+}
+function initGsi(){
+  if (!window.google?.accounts?.id || CONFIG.googleClientId.startsWith("BURAYA")) {
+    $("gsiMissing").hidden = !!store.get("user");
+    return fallbackToManual();
+  }
+  google.accounts.id.initialize({
+    client_id: CONFIG.googleClientId, callback: onCredential,
+    ux_mode: "popup", auto_select: true, use_fedcm_for_prompt: true, context: "signin",
+  });
+  google.accounts.id.renderButton($("gsiButton"), { theme: "outline", size: "large", text: "continue_with", shape: "pill", locale: "tr", width: 280 });
+  // Giriş yoksa ya da gruba ekleme yarım kaldıysa giriş penceresini kendiliğinden aç
+  const pendingJoin = CONFIG.autoJoinGroup && !store.get("group") && !store.get("groupFallback");
+  if (!store.get("user") || pendingJoin) google.accounts.id.prompt();
+}
+$("switchBtn").addEventListener("click", () => {
+  // Grup üyeliği ve testçilik hesaba bağlı; hesap değişince ilerlemeyi sıfırla
+  ["user", "group", "groupFallback", ...CONFIG.apps.map(a => "app:" + a.packageName)].forEach(k => store.set(k, null));
+  joining = false;
+  try { google.accounts.id.disableAutoSelect(); } catch {}
+  render();
+  try { google.accounts.id.prompt(); } catch {}
+});
+window.addEventListener("load", () => setTimeout(initGsi, 50));
+render();
+</script>
+</body>
+</html>
