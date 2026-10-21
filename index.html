@@ -52,6 +52,12 @@
   .check input{width:18px;height:18px;accent-color:var(--accent)}
   .note{background:var(--warn-soft);color:var(--warn);border-radius:12px;padding:12px 14px;font-size:.92rem;margin-bottom:16px}
   .note[hidden],.step[hidden],.status[hidden]{display:none}
+  .howto{margin:4px 0 16px;padding-left:22px;font-size:.94rem}
+  .howto li{margin-bottom:8px;padding-left:2px}
+  .howto li::marker{color:var(--accent);font-weight:700}
+  .ui{display:inline-block;padding:0 8px;border-radius:7px;background:var(--accent);color:var(--accent-ink);
+    font-weight:600;font-size:.86em;line-height:1.7;white-space:nowrap}
+  .ui.ghost{background:transparent;color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
   .status{margin:10px 0 0;font-size:.92rem;color:var(--accent);font-weight:600}
   #apps.locked{opacity:.45;pointer-events:none}
   details{border-top:1px solid var(--line);padding:12px 0}
@@ -93,7 +99,15 @@
   <!-- 2: Gruba katıl (otomatik modda sadece otomatik ekleme başarısız olursa görünür) -->
   <section class="step" id="s2">
     <div class="step-head"><div class="num">2</div><h2>Test grubuna katıl</h2></div>
-    <p class="muted">Açılan sayfada <b>“Gruba katıl”</b> butonuna bas. Bunu bir kez yapman yeterli.</p>
+    <p class="muted">Bunu sadece bir kez yapacaksın; tüm uygulamalar bu gruba bağlı.</p>
+    <ol class="howto">
+      <li>Aşağıdaki <span class="ui">Test grubunu aç</span> butonuna bas. Google Gruplar sayfası açılacak.</li>
+      <li>Sağ üstteki profil resminin <b>1. adımda seçtiğin hesap</b> olduğundan emin ol. Değilse resme dokunup doğru hesaba geç.</li>
+      <li><span class="ui">Gruba katıl</span> butonuna bas. Düğme görünmüyorsa telefonu yan çevir ya da sayfayı aşağı kaydır.</li>
+      <li>Açılan pencerede ayarlara dokunmana gerek yok. Gruptan e-posta almak istemiyorsan “Abonelik” kısmında <b>E-posta yok</b> seçebilirsin.</li>
+      <li>Penceredeki <span class="ui">Gruba katıl</span> butonuna tekrar bas. Düğme <span class="ui ghost">Gruptan ayrıl</span> olarak değiştiyse tamamdır ✓</li>
+      <li>Bu sayfaya geri dön ve aşağıdaki kutuyu işaretle.</li>
+    </ol>
     <a class="btn" id="groupBtn" target="_blank" rel="noopener">Test grubunu aç</a>
     <label class="check"><input type="checkbox" data-key="group"> Gruba katıldım</label>
   </section>
@@ -101,8 +115,15 @@
   <!-- 3: Uygulamalar -->
   <section class="step" id="s3">
     <div class="step-head"><div class="num">3</div><h2>Her uygulama için testçi ol</h2></div>
-    <p class="muted">Her uygulamada sırayla: önce <b>“Testçi ol”</b>, açılan sayfada <b>“Test kullanıcısı ol”</b>a bas; sonra <b>“Yükle”</b>.
-      Grup üyeliğinin yansıması birkaç dakika sürebilir.</p>
+    <p class="muted">Aşağıdaki her uygulama için bu adımları sırayla tekrarla:</p>
+    <ol class="howto">
+      <li>Uygulamanın kartındaki <span class="ui">1 · Testçi ol</span> butonuna bas. Google Play'in “test programı” sayfası açılacak.</li>
+      <li>Giriş yapmanı isterse <b>aynı Google hesabıyla</b> giriş yap.</li>
+      <li><span class="ui">Test kullanıcısı ol</span> butonuna bas. “Artık test kullanıcısısınız” yazısını görünce bu kısım tamam ✓</li>
+      <li>Bu sayfaya dön ve <span class="ui ghost">2 · Yükle</span> butonuna bas. Play Store açılınca <span class="ui">Yükle</span>ye bas.</li>
+      <li>Uygulamayı bir kez aç, sonra kartın altındaki kutuyu işaretle.</li>
+    </ol>
+    <p class="muted">“Uygulama bulunamadı” ya da “Test programı kullanılamıyor” görürsen gruba yeni katıldığın içindir; 5–10 dakika bekleyip tekrar dene.</p>
     <p class="note" id="appsLocked" hidden>Önce 1. adımda Google ile giriş yap; seni test grubuna ben ekleyeceğim.</p>
     <div id="apps"></div>
   </section>
